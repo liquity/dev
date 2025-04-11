@@ -50,6 +50,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
   const ZERO_ADDRESS = th.ZERO_ADDRESS
 
   const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
+  const assertRevert = th.assertRevert
 
   describe("Stability Pool Withdrawal", async () => {
 
@@ -210,13 +211,14 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), '0'), 10000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '0'), 10000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '0'), 10000)
+      // 1/3 LUSD each
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), '333333333333330000'), 10000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '333333333333330000'), 10000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '333333333333330000'), 10000)
 
-      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(99500, 15)), 10000)
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(99500, 15)), 10000)
-      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(99500, 15)), 10000)
+      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(99500, 15)), 5e15)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(99500, 15)), 5e15)
+      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(99500, 15)), 5e15)
     })
 
     // --- Identical deposits, increasing liquidation amounts ---
@@ -563,7 +565,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
 
-      // First two defaulters liquidated
+      // First two defaulters liquidated, 2/3 of SP, 10000/3 left
       await troveManager.liquidate(defaulter_1, { from: owner });
       await troveManager.liquidate(defaulter_2, { from: owner });
 
@@ -586,15 +588,16 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), '0'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '0'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '0'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), '0'), 100000)
+      // 1/6, 1/6, 1/6 and 1/2 LUSD
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), '166666666666660000'), 100000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '166666666666660000'), 100000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '166666666666660000'), 100000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), '499999999999980000'), 100000)
 
-      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, dec(995, 17)), 100000)
+      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 2e15)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 2e15)
+      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(995, 17)), 2e15)
+      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, dec(995, 17)), 5e15)
     })
 
     it("withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. Various deposit and liquidation vals.  A, B, C, D withdraw correct LUSD deposit and ETH Gain", async () => {
@@ -711,10 +714,17 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
       assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), '5000000000000000000000'), 100000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '49750000000000000000'), 100000)
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
+      await stabilityPool.withdrawFromSP(dec(10000, 18), { from: dennis })
+      await priceFeed.setPrice(dec(100, 18))
 
       // Two more defaulters are liquidated
       await troveManager.liquidate(defaulter_3, { from: owner });
       await troveManager.liquidate(defaulter_4, { from: owner });
+
+      // whale deposits LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
       const txA = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: alice })
       const txB = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: bob })
@@ -725,13 +735,13 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), '333333333333330000'), 1000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '333333333333330000'), 1000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '333333333333330000'), 1000)
 
-      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(995, 17)), 100000)
+      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 4e15)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 4e15)
+      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(995, 17)), 4e15)
     })
 
     it("withdrawETHGainToTrove(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. Various deposit and liquidation vals. A, B, C, D withdraw correct LUSD deposit and ETH Gain", async () => {
@@ -913,6 +923,24 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Defaulter 1 liquidated. 20000 LUSD fully offset with pool.
       await troveManager.liquidate(defaulter_1, { from: owner });
 
+      // whale deposits LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
+      // price up temporarily to avoid underwater troves to block SP withdrawal
+      await priceFeed.setPrice(dec(200, 18));
+      const txA = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: bob })
+      const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
+      const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
+      await priceFeed.setPrice(dec(100, 18));
+
+      // Expect Alice And Bob's compounded deposit to be 1 LUSD combbined
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), dec(5, 17)), 1e4)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(5, 17)), 1e4)
+
+      // Expect Alice and Bob's ETH Gain to be 100 ETH
+      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 5e15)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 5e15)
+
       // Carol, Dennis each deposit 10000 LUSD
       const depositors_2 = [carol, dennis]
       for (account of depositors_2) {
@@ -920,37 +948,31 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
         await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: account })
       }
 
+      // price up temporarily to avoid underwater troves to block SP withdrawal
+      await priceFeed.setPrice(dec(200, 18));
+      // whale withdraws as it’s not needed anymore
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: whale })
+      await priceFeed.setPrice(dec(100, 18));
+
       // Defaulter 2 liquidated. 10000 LUSD offset
       await troveManager.liquidate(defaulter_2, { from: owner });
 
       // await borrowerOperations.openTrove(th._100pct, dec(1, 18), account, account, { from: erin, value: dec(2, 'ether') })
       // await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: erin })
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: bob })
       const txC = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: carol })
       const txD = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: dennis })
 
-      const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
-      const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
-      // Expect Alice And Bob's compounded deposit to be 0 LUSD
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), '0'), 10000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '0'), 10000)
-
-      // Expect Alice and Bob's ETH Gain to be 100 ETH
-      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 100000)
-
       // Expect Carol And Dennis' compounded deposit to be 50 LUSD
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '5000000000000000000000'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), '5000000000000000000000'), 100000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), dec(5000, 18)), 3e17)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(5000, 18)), 3e17)
 
       // Expect Carol and and Dennis ETH Gain to be 50 ETH
-      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '49750000000000000000'), 100000)
-      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '49750000000000000000'), 100000)
+      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '49750000000000000000'), 3e15)
+      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '49750000000000000000'), 3e15)
     })
 
     // A, B deposit 10000
@@ -959,7 +981,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // C, D deposit 10000
     // L3 cancels 10000, 1 
     // L2 20000, 200 empties Pool
-    it("withdrawETHGainToTrove(): Pool-emptying liquidation increases epoch by one, resets scaleFactor to 0, and resets P to 1e18", async () => {
+    it("withdrawETHGainToTrove(): Almost pool-emptying liquidation resets scaleFactor to 0, and resets P to 1e18", async () => {
       // Whale opens Trove with 100k ETH
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
 
@@ -985,37 +1007,31 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
 
-      const epoch_0 = (await stabilityPool.currentEpoch()).toString()
       const scale_0 = (await stabilityPool.currentScale()).toString()
       const P_0 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_0, '0')
       assert.equal(scale_0, '0')
       assert.equal(P_0, dec(1, 18))
 
       // Defaulter 1 liquidated. 10--0 LUSD fully offset, Pool remains non-zero
       await troveManager.liquidate(defaulter_1, { from: owner });
 
-      //Check epoch, scale and sum
-      const epoch_1 = (await stabilityPool.currentEpoch()).toString()
+      // Check scale and sum
       const scale_1 = (await stabilityPool.currentScale()).toString()
       const P_1 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_1, '0')
       assert.equal(scale_1, '0')
       assert.isAtMost(th.getDifference(P_1, dec(5, 17)), 1000)
 
       // Defaulter 2 liquidated. 1--00 LUSD, empties pool
       await troveManager.liquidate(defaulter_2, { from: owner });
 
-      //Check epoch, scale and sum
-      const epoch_2 = (await stabilityPool.currentEpoch()).toString()
+      //Check scale and sum
       const scale_2 = (await stabilityPool.currentScale()).toString()
       const P_2 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_2, '1')
       assert.equal(scale_2, '0')
-      assert.equal(P_2, dec(1, 18))
+      assert.equal(P_2, dec(5, 13))
 
       // Carol, Dennis each deposit 10000 LUSD
       const depositors_2 = [carol, dennis]
@@ -1027,26 +1043,22 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Defaulter 3 liquidated. 10000 LUSD fully offset, Pool remains non-zero
       await troveManager.liquidate(defaulter_3, { from: owner });
 
-      //Check epoch, scale and sum
-      const epoch_3 = (await stabilityPool.currentEpoch()).toString()
+      //Check scale and sum
       const scale_3 = (await stabilityPool.currentScale()).toString()
       const P_3 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_3, '1')
       assert.equal(scale_3, '0')
-      assert.isAtMost(th.getDifference(P_3, dec(5, 17)), 1000)
+      assert.isAtMost(th.getDifference(P_3, dec(25, 12)), 13e8)
 
       // Defaulter 4 liquidated. 10000 LUSD, empties pool
       await troveManager.liquidate(defaulter_4, { from: owner });
 
-      //Check epoch, scale and sum
-      const epoch_4 = (await stabilityPool.currentEpoch()).toString()
+      //Check scale and sum
       const scale_4 = (await stabilityPool.currentScale()).toString()
       const P_4 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_4, '2')
       assert.equal(scale_4, '0')
-      assert.equal(P_4, dec(1, 18))
+      assert.isAtMost(th.getDifference(P_4, dec(25, 8)), 13e4)
     })
 
 
@@ -1057,7 +1069,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
     // A, B withdraw 0 LUSD & 100e
     // C, D withdraw 5000 LUSD  & 50e
-    it("withdrawETHGainToTrove(): Depositors withdraw correct compounded deposit after liquidation empties the pool", async () => {
+    it("withdrawETHGainToTrove(): Depositors withdraw correct compounded deposit after liquidation almost empties the pool", async () => {
       // Whale opens Trove with 100k ETH
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
 
@@ -1085,6 +1097,20 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Defaulter 1 liquidated. 20000 LUSD fully offset with pool.
       await troveManager.liquidate(defaulter_1, { from: owner });
 
+      // whale deposits LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
+
+      const txA = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: bob })
+      // Expect Alice And Bob's compounded deposit to be 1 LUSD combined
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), dec(5, 17)), 10000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(5, 17)), 10000)
+      // price up temporarily to avoid underwater troves to block SP withdrawal
+      await priceFeed.setPrice(dec(200, 18));
+      await stabilityPool.withdrawFromSP(dec(10000, 18), { from: alice })
+      await stabilityPool.withdrawFromSP(dec(10000, 18), { from: bob })
+      await priceFeed.setPrice(dec(100, 18));
+
       // Carol, Dennis, Erin each deposit 10000, 20000, 30000 LUSD respectively
       await lusdToken.transfer(carol, dec(10000, 18), { from: whale })
       await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: carol })
@@ -1095,11 +1121,18 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await lusdToken.transfer(erin, dec(30000, 18), { from: whale })
       await stabilityPool.provideToSP(dec(30000, 18), ZERO_ADDRESS, { from: erin })
 
+      // whale leaves the SP
+      // price up temporarily to avoid underwater troves to block SP withdrawal
+      await priceFeed.setPrice(dec(200, 18));
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: whale })
+      await priceFeed.setPrice(dec(100, 18));
+
       // Defaulter 2 liquidated. 10000 LUSD offset
       await troveManager.liquidate(defaulter_2, { from: owner });
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: bob })
+      // whale deposits LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
+
       const txC = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: carol })
       const txD = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: dennis })
       const txE = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: erin })
@@ -1110,21 +1143,17 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
       const erin_ETHWithdrawn = th.getEventArgByName(txE, 'ETHGainWithdrawn', '_ETH').toString()
 
-      // Expect Alice And Bob's compounded deposit to be 0 LUSD
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), '0'), 10000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '0'), 10000)
-
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '8333333333333333333333'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), '16666666666666666666666'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(erin)).toString(), '25000000000000000000000'), 100000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '8333333333333333333333'), 1e15)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), '16666666666666666666666'), 1e15)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(erin)).toString(), '25000000000000000000000'), 1e15)
 
       //Expect Alice and Bob's ETH Gain to be 1 ETH
-      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 100000)
+      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 1e16)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 1e16)
 
-      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '16583333333333333333'), 100000)
-      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '33166666666666666667'), 100000)
-      assert.isAtMost(th.getDifference(erin_ETHWithdrawn, '49750000000000000000'), 100000)
+      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '16583333333333333333'), 1e13)
+      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '33166666666666666667'), 1e13)
+      assert.isAtMost(th.getDifference(erin_ETHWithdrawn, '49750000000000000000'), 1e13)
     })
 
     // A deposits 10000
@@ -1162,8 +1191,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), 0), 100000)
-      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 100000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(alice)).toString(), toBN(dec(1, 18))), 100000)
+      // We subtract 1/10000 corresponding to the 1 LUSD left
+      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, toBN(dec(995, 17)).sub(toBN(dec(995, 13)))), 1)
     })
 
     //--- Serial full offsets ---
@@ -1265,24 +1295,21 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '0'), 100000)
       assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), '0'), 100000)
       assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), '0'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(erin)).toString(), '0'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(flyn)).toString(), '0'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(graham)).toString(), '0'), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(harriet)).toString(), '0'), 100000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(erin)).toString(), '0'), 1e14)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(flyn)).toString(), '0'), 1e14)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(graham)).toString(), 5e17), 1e14)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(harriet)).toString(), 5e17), 1e14)
 
-      /* Expect all ETH gains to be 100 ETH:  Since each liquidation of empties the pool, depositors
-      should only earn ETH from the single liquidation that cancelled with their deposit */
-      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(erin_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(flyn_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(graham_ETHWithdrawn, dec(995, 17)), 100000)
-      assert.isAtMost(th.getDifference(harriet_ETHWithdrawn, dec(995, 17)), 100000)
-
-      const finalEpoch = (await stabilityPool.currentEpoch()).toString()
-      assert.equal(finalEpoch, 4)
+      /* Expect all ETH gains to be 100 ETH:  Since each liquidation of almost empties the pool, depositors
+         should only earn ETH from the single liquidation that cancelled with their deposit minus the 1 LUSD */
+      assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 17)), 2000000)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 2000000)
+      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(995, 17)), 2e11)
+      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, dec(995, 17)), 2e11)
+      assert.isAtMost(th.getDifference(erin_ETHWithdrawn, dec(995, 17)), 5e12)
+      assert.isAtMost(th.getDifference(flyn_ETHWithdrawn, dec(995, 17)), 5e12)
+      assert.isAtMost(th.getDifference(graham_ETHWithdrawn, dec(995, 17)), 5e16)
+      assert.isAtMost(th.getDifference(harriet_ETHWithdrawn, dec(995, 17)), 5e16)
     })
 
     // --- Scale factor tests ---
@@ -1296,22 +1323,22 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // expect d(B) = d0(B)/100
     // expect correct ETH gain, i.e. all of the reward
     it("withdrawETHGainToTrove(): deposit spans one scale factor change: Single depositor withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
-      // Whale opens Trove with 100k ETH
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
+      // Whale opens Trove with 1e9 ETH
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1e11, 18)), whale, whale, { from: whale, value: dec(1e9, 'ether') })
+
+      await lusdToken.transfer(alice, dec(1e9, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(1e9, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: alice, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: bob, value: dec(10000, 'ether') })
 
-      await lusdToken.transfer(alice, dec(10000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: alice })
-
-      // Defaulter 1 withdraws 'almost' 10000 LUSD:  9999.99991 LUSD
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('9999999910000000000000'), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(100, 'ether') })
+      // Defaulter 1 withdraws 'almost' 1e9 LUSD:  999999991 LUSD
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(999999991, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1e7, 'ether') })
 
       assert.equal(await stabilityPool.currentScale(), '0')
 
       // Defaulter 2 withdraws 9900 LUSD
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(9900, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(60, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99e7, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1e7, 'ether') })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1319,6 +1346,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Defaulter 1 liquidated.  Value of P reduced to 9e9.
       await troveManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await stabilityPool.P()).toString(), dec(9, 9))
+
+      // whale deposits LUSD so Alice can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
       // Increasing the price for a moment to avoid pending liquidations to block withdrawal
       await priceFeed.setPrice(dec(200, 18))
@@ -1328,21 +1358,23 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = await th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
 
-      await lusdToken.transfer(bob, dec(10000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: bob })
+      await lusdToken.transfer(bob, dec(1e9, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(1e9, 18), ZERO_ADDRESS, { from: bob })
 
       // Defaulter 2 liquidated.  9900 LUSD liquidated. P altered by a factor of 1-(9900/10000) = 0.01.  Scale changed.
       await troveManager.liquidate(defaulter_2, { from: owner });
 
       assert.equal(await stabilityPool.currentScale(), '1')
 
+      // whale deposits LUSD so Bob can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
+
       const txB = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: bob })
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
 
-      // Expect Bob to retain 1% of initial deposit (100 LUSD) and all the liquidated ETH (60 ether)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), '100000000000000000000'), 100000)
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '59700000000000000000'), 100000)
-      
+      // Expect Bob to retain 1% of initial deposit and almostall the liquidated ETH
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(1e7, 18)), 1e18)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995e4, 18)), 1e16)
     })
 
     // A deposits 10000
@@ -1354,22 +1386,22 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // expect d(B) = d0(B)/100
     // expect correct ETH gain, i.e. all of the reward
     it("withdrawETHGainToTrove(): Several deposits of varying amounts span one scale factor change. Depositors withdraw correct compounded deposit and ETH Gain after one liquidation", async () => {
-      // Whale opens Trove with 100k ETH
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
+      // Whale opens Trove with 1e9 ETH
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1e11, 18)), whale, whale, { from: whale, value: dec(1e9, 'ether') })
 
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: alice, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: bob, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: carol, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: dennis, value: dec(10000, 'ether') })
       
-      await lusdToken.transfer(alice, dec(10000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: alice })
+      await lusdToken.transfer(alice, dec(1e9, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(1e9, 18), ZERO_ADDRESS, { from: alice })
 
-      // Defaulter 1 withdraws 'almost' 10k LUSD.
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('9999999910000000000000'), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(100, 'ether') })
+      // Defaulter 1 withdraws 'almost' 1e9 LUSD.
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(999999991, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1e7, 'ether') })
 
-      // Defaulter 2 withdraws 59400 LUSD
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('59400000000000000000000'), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(330, 'ether') })
+      // Defaulter 2 withdraws 594e7 LUSD
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(594e7, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(6e7, 'ether') })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1379,6 +1411,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal((await stabilityPool.P()).toString(), dec(9, 9))
 
       assert.equal(await stabilityPool.currentScale(), '0')
+
+      // whale deposits LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
       // Increasing the price for a moment to avoid pending liquidations to block withdrawal
       await priceFeed.setPrice(dec(200, 18))
@@ -1414,17 +1449,17 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
      
       Total: 6000 LUSD, 300 Ether
       */
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(100, 18)), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), dec(200, 18)), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(300, 18)), 100000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(16666, 13)), 1e13)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), dec(33333, 13)), 1e13)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(5, 17)), 1e13)
 
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = await th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
       const dennis_ETHWithdrawn = await th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '54725000000000000000'), 100000)
-      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '109450000000000000000'), 100000)
-      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '164175000000000000000'), 100000)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(1005, 17)), 4e15)
+      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(2010, 17)), 7e15)
+      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, dec(3015, 17)), 2e16)
     })
 
     // Deposit's ETH reward spans one scale change - deposit reduced by correct amount
@@ -1439,18 +1474,18 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // expect B gets entire ETH gain from L2
     it("withdrawETHGainToTrove(): deposit spans one scale factor change: Single depositor withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens Trove with 100k ETH
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1000000, 18)), whale, whale, { from: whale, value: dec(1000000, 'ether') })
 
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: alice, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: bob, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: carol, value: dec(10000, 'ether') })
       
-      await lusdToken.transfer(alice, dec(10000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: alice })
+      await lusdToken.transfer(alice, dec(100000, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(100000, 18), ZERO_ADDRESS, { from: alice })
 
-      // Defaulter 1 and default 2 each withdraw 9999.999999999 LUSD
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99999, 17)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(100, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99999, 17)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(100, 'ether') })
+      // Defaulter 1 and default 2 each withdraw 99999 LUSD
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99999, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99999, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1000, 'ether') })
 
       // price drops by 50%: defaulter 1 ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -1462,52 +1497,54 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(await stabilityPool.currentScale(), '0')
 
       // Alice withdraws
+      // whale deposits LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
       // Increasing the price for a moment to avoid pending liquidations to block withdrawal
       await priceFeed.setPrice(dec(200, 18))
-      const txA = await stabilityPool.withdrawFromSP(dec(10000, 18), { from: alice })
+      const txA = await stabilityPool.withdrawFromSP(dec(100000, 18), { from: alice })
       await priceFeed.setPrice(dec(100, 18))
 
-      // Bob deposits 10k LUSD
-      await lusdToken.transfer(bob, dec(10000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: bob })
+      // Bob deposits 10k-1 LUSD
+      await lusdToken.transfer(bob, dec(99999, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(99999, 18), ZERO_ADDRESS, { from: bob })
 
       // Defaulter 2 liquidated
       const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
-      assert.equal(await stabilityPool.P(), dec(1, 17))  // Scale changes and P changes. P = 1e(13-5+9) = 1e17
+      assert.isAtMost(th.getDifference(await stabilityPool.P(), dec(1, 17)), 1e12) // P decreases. P = 1e(13-5+9) = 1e17
       assert.equal(await stabilityPool.currentScale(), '1')
 
       const txB = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: bob })
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
 
       // Bob should withdraw 1e-5 of initial deposit: 0.1 LUSD and the full ETH gain of 100 ether
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(1, 17)), 100000)
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 100000000000)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(1, 18)), 1e13)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 18)), 1e16)
     })
 
     // A make deposit 10000 LUSD
-    // L1 brings P to 1e-5*P. L1:  9999.9000000000000000 LUSD
+    // L1 brings P to 1e-5*P. L1:  99999 LUSD
     // A withdraws
     // B,C D make deposit 10000, 20000, 30000
-    // L2 decreases P again by 1e-5, over boundary. L2: 59999.4000000000000000  (near to the 60000 LUSD total deposits)
+    // L2 decreases P again by 1e-5, over boundary. L2: 599995  (near to the 600000 LUSD total deposits)
     // B withdraws
     // expect d(B) = d0(B) * 1e-5
     // expect B gets entire ETH gain from L2
     it("withdrawETHGainToTrove(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens Trove with 100k ETH
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1000000, 18)), whale, whale, { from: whale, value: dec(1000000, 'ether') })
 
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: alice, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: bob, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: carol, value: dec(10000, 'ether') })
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: dennis, value: dec(10000, 'ether') })
-      
-      await lusdToken.transfer(alice, dec(10000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: alice })
 
-      // Defaulter 1 and default 2 withdraw up to debt of 9999.9 LUSD and 59999.4 LUSD
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('9999900000000000000000'), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(100, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('59999400000000000000000'), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(600, 'ether') })
+      await lusdToken.transfer(alice, dec(100000, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(100000, 18), ZERO_ADDRESS, { from: alice })
+
+      // Defaulter 1 and default 2 withdraw up to debt of 99999 LUSD and 599995 LUSD
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99999, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(599995, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(6000, 'ether') })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1518,26 +1555,31 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(await stabilityPool.currentScale(), '0')
 
       // Alice withdraws
+      // whale deposits LUSD so Alice can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
       // Increasing the price for a moment to avoid pending liquidations to block withdrawal
       await priceFeed.setPrice(dec(200, 18))
       const txA = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
       await priceFeed.setPrice(dec(100, 18))
 
       // B, C, D deposit 10000, 20000, 30000 LUSD
-      await lusdToken.transfer(bob, dec(10000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: bob })
+      await lusdToken.transfer(bob, dec(100000, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(100000, 18), ZERO_ADDRESS, { from: bob })
 
-      await lusdToken.transfer(carol, dec(20000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(20000, 18), ZERO_ADDRESS, { from: carol })
+      await lusdToken.transfer(carol, dec(200000, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(200000, 18), ZERO_ADDRESS, { from: carol })
 
-      await lusdToken.transfer(dennis, dec(30000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(30000, 18), ZERO_ADDRESS, { from: dennis })
+      await lusdToken.transfer(dennis, dec(300000, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(300000, 18), ZERO_ADDRESS, { from: dennis })
 
       // Defaulter 2 liquidated
       const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
-      assert.equal(await stabilityPool.P(), dec(1, 17))  // P decreases. P = 1e(13-5+9) = 1e17
+      assert.isAtMost(th.getDifference(await stabilityPool.P(), dec(1, 17)), 1e12) // P decreases. P = 1e(13-5+9) = 1e17
       assert.equal(await stabilityPool.currentScale(), '1')
+
+      // whale deposits LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
       const txB = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: bob })
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
@@ -1548,20 +1590,20 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const txD = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: dennis })
       const dennis_ETHWithdrawn = await th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
-      // {B, C, D} should have a compounded deposit of {0.1, 0.2, 0.3} LUSD
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(1, 17)), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), dec(2, 17)), 100000)
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(3, 17)), 100000)
+      // {B, C, D} should have a compounded deposit of {1+1/6, 2+1/3, 3+1/2} of 6 remaining LUSD
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(1, 18)), 2e12)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(carol)).toString(), dec(2, 18)), 4e12)
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(3, 18)), 5e12)
 
-      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 17)), 10000000000)
-      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(1990, 17)), 100000000000)
-      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, dec(2985, 17)), 100000000000)
+      assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 18)), 1e16)
+      assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(1990, 18)), 1e16)
+      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, dec(2985, 18)), 1e16)
     })
 
     // A make deposit 10000 LUSD
     // L1 brings P to (~1e-10)*P. L1: 9999.9999999000000000 LUSD
     // Expect A to withdraw 0 deposit
-    it("withdrawETHGainToTrove(): Deposit that decreases to less than 1e-9 of it's original value is reduced to 0", async () => {
+    it("withdrawETHGainToTrove(): Deposit that decreases to less than 1e-9 of it's original value is reduced to 1", async () => {
       // Whale opens Trove with 100k ETH
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
 
@@ -1584,42 +1626,42 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.isTrue(txL1.receipt.status)
 
       const aliceDeposit = (await stabilityPool.getCompoundedLUSDDeposit(alice)).toString()
-      console.log(`alice deposit: ${aliceDeposit}`)
-      assert.equal(aliceDeposit, 0)
+      // console.log(`alice deposit: ${aliceDeposit}`)
+      assert.isAtMost(th.getDifference(aliceDeposit, toBN(dec(1, 18))), 10000)
     })
 
     // --- Serial scale changes ---
 
-    /* A make deposit 10000 LUSD
-    L1 brings P to 0.0001P. L1:  9999.900000000000000000 LUSD, 1 ETH
-    B makes deposit 9999.9, brings SP to 10k
-    L2 decreases P by(~1e-5)P. L2:  9999.900000000000000000 LUSD, 1 ETH
-    C makes deposit 9999.9, brings SP to 10k
-    L3 decreases P by(~1e-5)P. L3:  9999.900000000000000000 LUSD, 1 ETH
-    D makes deposit 9999.9, brings SP to 10k
-    L4 decreases P by(~1e-5)P. L4:  9999.900000000000000000 LUSD, 1 ETH
+    /* A make deposit 100000 LUSD
+    L1 brings P to 0.0001P. L1:  99999 LUSD, 1 ETH
+    B makes deposit 99999, brings SP to 10k
+    L2 decreases P by(~1e-5)P. L2:  99999 LUSD, 1 ETH
+    C makes deposit 99999, brings SP to 10k
+    L3 decreases P by(~1e-5)P. L3:  99999 LUSD, 1 ETH
+    D makes deposit 99999, brings SP to 10k
+    L4 decreases P by(~1e-5)P. L4:  99999 LUSD, 1 ETH
     expect A, B, C, D each withdraw ~100 Ether
     */
     it("withdrawETHGainToTrove(): Several deposits of 10000 LUSD span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens Trove with 100k ETH
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1000000, 18)), whale, whale, { from: whale, value: dec(1000000, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: alice, value: dec(10000, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: bob, value: dec(10000, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: carol, value: dec(10000, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: dennis, value: dec(10000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: alice, value: dec(100000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: bob, value: dec(100000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: carol, value: dec(100000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), ZERO_ADDRESS, ZERO_ADDRESS, { from: dennis, value: dec(100000, 'ether') })
       
-      // Defaulters 1-4 each withdraw 9999.9 LUSD
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('9999900000000000000000'), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(100, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('9999900000000000000000'), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(100, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('9999900000000000000000'), defaulter_3, defaulter_3, { from: defaulter_3, value: dec(100, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('9999900000000000000000'), defaulter_4, defaulter_4, { from: defaulter_4, value: dec(100, 'ether') })
+      // Defaulters 1-4 each withdraw 99999 LUSD
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('99999000000000000000000'), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('99999000000000000000000'), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('99999000000000000000000'), defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1000, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount('99999000000000000000000'), defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1000, 'ether') })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
 
-      await lusdToken.transfer(alice, dec(10000, 18), { from: whale })
-      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: alice })
+      await lusdToken.transfer(alice, dec(100000, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(100000, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 liquidated. 
       const txL1 = await troveManager.liquidate(defaulter_1, { from: owner });
@@ -1627,9 +1669,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(await stabilityPool.P(), dec(1, 13)) // P decreases to 1e(18-5) = 1e13
       assert.equal(await stabilityPool.currentScale(), '0')
 
-      // B deposits 9999.9 LUSD
-      await lusdToken.transfer(bob, dec(99999, 17), { from: whale })
-      await stabilityPool.provideToSP(dec(99999, 17), ZERO_ADDRESS, { from: bob })
+      // B deposits 99999 LUSD
+      await lusdToken.transfer(bob, dec(99999, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(99999, 18), ZERO_ADDRESS, { from: bob })
 
       // Defaulter 2 liquidated
       const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
@@ -1637,9 +1679,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(await stabilityPool.P(), dec(1, 17)) // Scale changes and P changes to 1e(13-5+9) = 1e17
       assert.equal(await stabilityPool.currentScale(), '1')
 
-      // C deposits 9999.9 LUSD
-      await lusdToken.transfer(carol, dec(99999, 17), { from: whale })
-      await stabilityPool.provideToSP(dec(99999, 17), ZERO_ADDRESS, { from: carol })
+      // C deposits 99999 LUSD
+      await lusdToken.transfer(carol, dec(99999, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(99999, 18), ZERO_ADDRESS, { from: carol })
 
       // Defaulter 3 liquidated
       const txL3 = await troveManager.liquidate(defaulter_3, { from: owner });
@@ -1647,9 +1689,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(await stabilityPool.P(), dec(1, 12)) // P decreases to 1e(17-5) = 1e12
       assert.equal(await stabilityPool.currentScale(), '1')
 
-      // D deposits 9999.9 LUSD
-      await lusdToken.transfer(dennis, dec(99999, 17), { from: whale })
-      await stabilityPool.provideToSP(dec(99999, 17), ZERO_ADDRESS, { from: dennis })
+      // D deposits 99999 LUSD
+      await lusdToken.transfer(dennis, dec(99999, 18), { from: whale })
+      await stabilityPool.provideToSP(dec(99999, 18), ZERO_ADDRESS, { from: dennis })
 
       // Defaulter 4 liquidated
       const txL4 = await troveManager.liquidate(defaulter_4, { from: owner });
@@ -1671,18 +1713,18 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(await stabilityPool.getCompoundedLUSDDeposit(alice), '0')
       assert.equal(await stabilityPool.getCompoundedLUSDDeposit(alice), '0')
       assert.equal(await stabilityPool.getCompoundedLUSDDeposit(alice), '0')
-      // D should retain around 0.9999 LUSD, since his deposit of 9999.9 was reduced by a factor of 1e-5
-      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(99999, 12)), 100000)
+      // D should retain around 0.9999 LUSD, since his deposit of 99999 was reduced by a factor of 1e-5
+      assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(99999, 13)), 100000)
 
       // 99.5 ETH is offset at each L, 0.5 goes to gas comp
       // Each depositor gets ETH rewards of around 99.5 ETH. 1e17 error tolerance
-      assert.isTrue(toBN(alice_ETHWithdrawn).sub(toBN(dec(995, 17))).abs().lte(toBN(dec(1, 17))))
-      assert.isTrue(toBN(bob_ETHWithdrawn).sub(toBN(dec(995, 17))).abs().lte(toBN(dec(1, 17))))
-      assert.isTrue(toBN(carol_ETHWithdrawn).sub(toBN(dec(995, 17))).abs().lte(toBN(dec(1, 17))))
-      assert.isTrue(toBN(dennis_ETHWithdrawn).sub(toBN(dec(995, 17))).abs().lte(toBN(dec(1, 17))))
+      assert.isTrue(toBN(alice_ETHWithdrawn).sub(toBN(dec(995, 18))).abs().lte(toBN(dec(1, 17))))
+      assert.isTrue(toBN(bob_ETHWithdrawn).sub(toBN(dec(995, 18))).abs().lte(toBN(dec(1, 17))))
+      assert.isTrue(toBN(carol_ETHWithdrawn).sub(toBN(dec(995, 18))).abs().lte(toBN(dec(1, 17))))
+      assert.isTrue(toBN(dennis_ETHWithdrawn).sub(toBN(dec(995, 18))).abs().lte(toBN(dec(1, 17))))
     })
 
-    it("withdrawETHGainToTrove(): 2 depositors can withdraw after each receiving half of a pool-emptying liquidation", async () => {
+    it("withdrawETHGainToTrove(): 2 depositors can withdraw after each receiving half of an almost pool-emptying liquidation", async () => {
       // Whale opens Trove with 100k ETH
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
 
@@ -1716,18 +1758,18 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const B_deposit = await stabilityPool.getCompoundedLUSDDeposit(B)
       // console.log(`A_deposit: ${A_deposit}`)
       // console.log(`B_deposit: ${B_deposit}`)
-      assert.equal(A_deposit, '0')
-      assert.equal(B_deposit, '0')
+      assert.isAtMost(th.getDifference(A_deposit, toBN(dec(5, 17))), 10000)
+      assert.isAtMost(th.getDifference(B_deposit, toBN(dec(5, 17))), 10000)
 
-      // Check SP tracker is zero
+      // Check SP tracker is 1
       const LUSDinSP_1 = await stabilityPool.getTotalLUSDDeposits()
       // console.log(`LUSDinSP_1: ${LUSDinSP_1}`)
-      assert.equal(LUSDinSP_1, '0')
+      assert.equal(LUSDinSP_1, dec(1, 18))
 
-      // Check SP LUSD balance is zero
+      // Check SP LUSD balance is 1
       const SPLUSDBalance_1 = await lusdToken.balanceOf(stabilityPool.address)
       // console.log(`SPLUSDBalance_1: ${SPLUSDBalance_1}`)
-      assert.equal(SPLUSDBalance_1, '0')
+      assert.equal(SPLUSDBalance_1, dec(1, 18))
 
       // Attempt withdrawals
       // Increasing the price for a moment to avoid pending liquidations to block withdrawal
@@ -1756,18 +1798,18 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const D_deposit = await stabilityPool.getCompoundedLUSDDeposit(D)
       // console.log(`A_deposit: ${C_deposit}`)
       // console.log(`B_deposit: ${D_deposit}`)
-      assert.equal(C_deposit, '0')
-      assert.equal(D_deposit, '0')
+      assert.equal(C_deposit, '499975001200009999')
+      assert.equal(D_deposit, '499975001200009999')
 
-      // Check SP tracker is zero
+      // Check SP tracker is 1
       const LUSDinSP_2 = await stabilityPool.getTotalLUSDDeposits()
       // console.log(`LUSDinSP_2: ${LUSDinSP_2}`)
-      assert.equal(LUSDinSP_2, '0')
+      assert.equal(LUSDinSP_2, dec(1, 18))
 
-      // Check SP LUSD balance is zero
+      // Check SP LUSD balance is 1
       const SPLUSDBalance_2 = await lusdToken.balanceOf(stabilityPool.address)
       // console.log(`SPLUSDBalance_2: ${SPLUSDBalance_2}`)
-      assert.equal(SPLUSDBalance_2, '0')
+      assert.equal(SPLUSDBalance_2, dec(1, 18))
 
       // Attempt withdrawals
       // Increasing the price for a moment to avoid pending liquidations to block withdrawal
@@ -1794,23 +1836,27 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Check compounded deposits
       const E_deposit = await stabilityPool.getCompoundedLUSDDeposit(E)
       const F_deposit = await stabilityPool.getCompoundedLUSDDeposit(F)
-      // console.log(`E_deposit: ${E_deposit}`)
-      // console.log(`F_deposit: ${F_deposit}`)
-      assert.equal(E_deposit, '0')
-      assert.equal(F_deposit, '0')
+      // console.log(`E_deposit: ${E_deposit.toString()}`)
+      // console.log(`F_deposit: ${F_deposit.toString()}`)
+      assert.equal(E_deposit, '499975001249938493')
+      assert.equal(F_deposit, '499975001249938493')
 
-      // Check SP tracker is zero
+      // Check SP tracker is 1
       const LUSDinSP_3 = await stabilityPool.getTotalLUSDDeposits()
-      assert.equal(LUSDinSP_3, '0')
+      assert.equal(LUSDinSP_3, dec(1, 18))
 
-      // Check SP LUSD balance is zero
+      // Check SP LUSD balance is 1
       const SPLUSDBalance_3 = await lusdToken.balanceOf(stabilityPool.address)
       // console.log(`SPLUSDBalance_3: ${SPLUSDBalance_3}`)
-      assert.equal(SPLUSDBalance_3, '0')
+      assert.equal(SPLUSDBalance_3, dec(1, 18))
 
       // Attempt withdrawals
-      const txE = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: E })
-      const txF = await stabilityPool.withdrawETHGainToTrove(ZERO_ADDRESS, ZERO_ADDRESS, { from: F })
+      await assertRevert(stabilityPool.withdrawFromSP(dec(1000, 18), { from: E }), "Withdrawal must leave totalBoldDeposits >= MIN_LUSD_IN_SP")
+      await assertRevert(stabilityPool.withdrawFromSP(dec(1000, 18), { from: F }), "Withdrawal must leave totalBoldDeposits >= MIN_LUSD_IN_SP")
+      // whale deposits LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
+      const txE = await stabilityPool.withdrawFromSP(dec(1000, 18), { from: E })
+      const txF = await stabilityPool.withdrawFromSP(dec(1000, 18), { from: F })
       assert.isTrue(txE.receipt.status)
       assert.isTrue(txF.receipt.status)
     })

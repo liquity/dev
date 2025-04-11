@@ -10,7 +10,7 @@ contract StabilityPoolTester is StabilityPool {
         ETH = ETH.add(msg.value);
     }
 
-    function setCurrentScale(uint128 _currentScale) external {
+    function setCurrentScale(uint _currentScale) external {
         currentScale = _currentScale;
     }
 

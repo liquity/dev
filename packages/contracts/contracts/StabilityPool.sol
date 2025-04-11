@@ -11,10 +11,9 @@ import './Interfaces/ISortedTroves.sol';
 import "./Interfaces/ICommunityIssuance.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/SafeMath.sol";
-import "./Dependencies/LiquitySafeMath128.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
-import "./Dependencies/console.sol";
+//import "./Dependencies/console.sol";
 
 /*
  * The Stability Pool holds LUSD tokens deposited by Stability Pool depositors.
@@ -73,30 +72,20 @@ import "./Dependencies/console.sol";
  * scale boundary: when P is at its minimum value of 1e9, the relative precision loss in P due to floor division is only on the 
  * order of 1e-9. 
  *
- * --- EPOCHS ---
+ * --- TRACKING DEPOSIT OVER SCALE CHANGES ---
  *
- * Whenever a liquidation fully empties the Stability Pool, all deposits should become 0. However, setting P to 0 would make P be 0
- * forever, and break all future reward calculations.
+ * When a deposit is made, it gets snapshots of the currentScale.
  *
- * So, every time the Stability Pool is emptied by a liquidation, we reset P = 1 and currentScale = 0, and increment the currentEpoch by 1.
- *
- * --- TRACKING DEPOSIT OVER SCALE CHANGES AND EPOCHS ---
- *
- * When a deposit is made, it gets snapshots of the currentEpoch and the currentScale.
- *
- * When calculating a compounded deposit, we compare the current epoch to the deposit's epoch snapshot. If the current epoch is newer,
- * then the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0.
- *
- * Otherwise, we then compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
+ * We compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
  * If it spans one scale change, it is given by d_t * P/(P_t * 1e9). If it spans more than one scale change, we define the compounded deposit
  * as 0, since it is now less than 1e-9'th of its initial value (e.g. a deposit of 1 billion LUSD has depleted to < 1 LUSD).
  *
  *
- *  --- TRACKING DEPOSITOR'S ETH GAIN OVER SCALE CHANGES AND EPOCHS ---
+ *  --- TRACKING DEPOSITOR'S ETH GAIN OVER SCALE CHANGES ---
  *
- * In the current epoch, the latest value of S is stored upon each scale change, and the mapping (scale -> S) is stored for each epoch.
+ * The latest value of S is stored upon each scale change.
  *
- * This allows us to calculate a deposit's accumulated ETH gain, during the epoch in which the deposit was non-zero and earned ETH.
+ * This allows us to calculate a deposit's accumulated ETH gain.
  *
  * We calculate the depositor's accumulated ETH gain for the scale at which they made the deposit, using the ETH gain formula:
  * e_1 = d_t * (S - S_t) / P_t
@@ -146,7 +135,7 @@ import "./Dependencies/console.sol";
  *
  */
 contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
-    using LiquitySafeMath128 for uint128;
+    using SafeMath for uint256;
 
     string constant public NAME = "StabilityPool";
 
@@ -182,8 +171,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint S;
         uint P;
         uint G;
-        uint128 scale;
-        uint128 epoch;
+        uint scale;
     }
 
     mapping (address => Deposit) public deposits;  // depositor address -> Deposit struct
@@ -192,6 +180,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     mapping (address => FrontEnd) public frontEnds;  // front end address -> FrontEnd struct
     mapping (address => uint) public frontEndStakes; // front end address -> last recorded total deposits, tagged with that front end
     mapping (address => Snapshots) public frontEndSnapshots; // front end address -> snapshots struct
+
+    // We never allow the SP to go below this amount through withdrawals or liquidations
+    uint constant internal MIN_LUSD_IN_SP = 1e18;
 
     /*  Product 'P': Running product by which to multiply an initial deposit, in order to find the current compounded deposit,
     * after a series of liquidations have occurred, each of which cancel some LUSD debt with the deposit.
@@ -204,20 +195,14 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     uint public constant SCALE_FACTOR = 1e9;
 
     // Each time the scale of P shifts by SCALE_FACTOR, the scale is incremented by 1
-    uint128 public currentScale;
-
-    // With each offset that fully empties the Pool, the epoch is incremented by 1
-    uint128 public currentEpoch;
+    uint public currentScale;
 
     /* ETH Gain sum 'S': During its lifetime, each deposit d_t earns an ETH gain of ( d_t * [S - S_t] )/P_t, where S_t
     * is the depositor's snapshot of S taken at the time t when the deposit was made.
     *
-    * The 'S' sums are stored in a nested mapping (epoch => scale => sum):
-    *
-    * - The inner mapping records the sum S at different scales
-    * - The outer mapping records the (scale => sum) mappings, for different epochs.
+    * The 'S' sums are stored in a mapping (scale => sum), that records the sum S at different scales
     */
-    mapping (uint128 => mapping(uint128 => uint)) public epochToScaleToSum;
+    mapping(uint => uint) public scaleToSum;
 
     /*
     * Similarly, the sum 'G' is used to calculate LQTY gains. During it's lifetime, each deposit d_t earns a LQTY gain of
@@ -226,7 +211,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     *  LQTY reward events occur are triggered by depositor operations (new deposit, topup, withdrawal), and liquidations.
     *  In each case, the LQTY reward is issued (i.e. G is updated), before other state changes are made.
     */
-    mapping (uint128 => mapping(uint128 => uint)) public epochToScaleToG;
+    mapping(uint => uint) public scaleToG;
 
     // Error tracker for the error correction in the LQTY issuance calculation
     uint public lastLQTYError;
@@ -249,10 +234,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
 
     event P_Updated(uint _P);
-    event S_Updated(uint _S, uint128 _epoch, uint128 _scale);
-    event G_Updated(uint _G, uint128 _epoch, uint128 _scale);
-    event EpochUpdated(uint128 _currentEpoch);
-    event ScaleUpdated(uint128 _currentScale);
+    event S_Updated(uint _S, uint _scale);
+    event G_Updated(uint _G, uint _scale);
+    event ScaleUpdated(uint _currentScale);
 
     event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
     event FrontEndTagSet(address indexed _depositor, address indexed _frontEnd);
@@ -401,6 +385,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
+        // It will check that total does not go below MIN_LUSD_IN_SP
         _sendLUSDToDepositor(msg.sender, LUSDtoWithdraw);
 
         // Update deposit
@@ -480,9 +465,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalLUSD);
 
         uint marginalLQTYGain = LQTYPerUnitStaked.mul(P);
-        epochToScaleToG[currentEpoch][currentScale] = epochToScaleToG[currentEpoch][currentScale].add(marginalLQTYGain);
+        scaleToG[currentScale] = scaleToG[currentScale].add(marginalLQTYGain);
 
-        emit G_Updated(epochToScaleToG[currentEpoch][currentScale], currentEpoch, currentScale);
+        emit G_Updated(scaleToG[currentScale], currentScale);
     }
 
     function _computeLQTYPerUnitStaked(uint _LQTYIssuance, uint _totalLUSDDeposits) internal returns (uint) {
@@ -506,6 +491,20 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     // --- Liquidation functions ---
+
+    function getMaxAmountToOffset() external view override returns (uint) {
+        uint totalLUSD = totalLUSDDeposits; // cache
+        // - If the SP has total deposits >= 1e18, we leave 1e18 in it untouched.
+        // - If it has 0 < x < 1e18 total deposits, we leave x in it.
+        uint256 lusdToLeaveInSP = LiquityMath._min(MIN_LUSD_IN_SP, totalLUSD);
+        uint LUSDInSPForOffsets = totalLUSD - lusdToLeaveInSP; // safe, for the line above
+        // Let’s avoid underflow in case of a tiny offset
+        if (LUSDInSPForOffsets.mul(DECIMAL_PRECISION) <= lastLUSDLossError_Offset) {
+            LUSDInSPForOffsets = 0;
+        }
+
+        return LUSDInSPForOffsets;
+    }
 
     /*
     * Cancels out the specified debt against the LUSD contained in the Stability Pool (as far as possible)
@@ -550,19 +549,26 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         */
         uint ETHNumerator = _collToAdd.mul(DECIMAL_PRECISION).add(lastETHError_Offset);
 
-        assert(_debtToOffset <= _totalLUSDDeposits);
-        if (_debtToOffset == _totalLUSDDeposits) {
-            LUSDLossPerUnitStaked = DECIMAL_PRECISION;  // When the Pool depletes to 0, so does each deposit 
-            lastLUSDLossError_Offset = 0;
+        assert(_debtToOffset < _totalLUSDDeposits);
+        uint LUSDLossNumerator;
+        /* Let’s avoid underflow in case of a small offset
+         * Per getMaxAmountToOffset, if the max used, this will never happen.
+         * If the max is not used, then offset value is at least MN_NET_DEBT,
+         * which means that total LUSD deposits when error was produced was around 2e21 LUSD.
+         * See: https://github.com/liquity/dev/pull/417#issuecomment-805721292
+         * As we are doing floor + 1 in the division, it will still offset something
+         */
+        if (_debtToOffset.mul(DECIMAL_PRECISION) <= lastLUSDLossError_Offset) {
+            LUSDLossNumerator = 0;
         } else {
-            uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
-            /*
-            * Add 1 to make error in quotient positive. We want "slightly too much" LUSD loss,
-            * which ensures the error in any given compoundedLUSDDeposit favors the Stability Pool.
-            */
-            LUSDLossPerUnitStaked = (LUSDLossNumerator.div(_totalLUSDDeposits)).add(1);
-            lastLUSDLossError_Offset = (LUSDLossPerUnitStaked.mul(_totalLUSDDeposits)).sub(LUSDLossNumerator);
+            LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
         }
+        /*
+         * Add 1 to make error in quotient positive. We want "slightly too much" LUSD loss,
+         * which ensures the error in any given compoundedLUSDDeposit favors the Stability Pool.
+         */
+        LUSDLossPerUnitStaked = (LUSDLossNumerator.div(_totalLUSDDeposits)).add(1);
+        lastLUSDLossError_Offset = (LUSDLossPerUnitStaked.mul(_totalLUSDDeposits)).sub(LUSDLossNumerator);
 
         ETHGainPerUnitStaked = ETHNumerator.div(_totalLUSDDeposits);
         lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(_totalLUSDDeposits));
@@ -582,9 +588,8 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         */
         uint newProductFactor = uint(DECIMAL_PRECISION).sub(_LUSDLossPerUnitStaked);
 
-        uint128 currentScaleCached = currentScale;
-        uint128 currentEpochCached = currentEpoch;
-        uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
+        uint currentScaleCached = currentScale;
+        uint currentS = scaleToSum[currentScaleCached];
 
         /*
         * Calculate the new S first, before we update P.
@@ -595,22 +600,21 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         */
         uint marginalETHGain = _ETHGainPerUnitStaked.mul(currentP);
         uint newS = currentS.add(marginalETHGain);
-        epochToScaleToSum[currentEpochCached][currentScaleCached] = newS;
-        emit S_Updated(newS, currentEpochCached, currentScaleCached);
-
-        // If the Stability Pool was emptied, increment the epoch, and reset the scale and product P
-        if (newProductFactor == 0) {
-            currentEpoch = currentEpochCached.add(1);
-            emit EpochUpdated(currentEpoch);
-            currentScale = 0;
-            emit ScaleUpdated(currentScale);
-            newP = DECIMAL_PRECISION;
+        scaleToSum[currentScaleCached] = newS;
+        emit S_Updated(newS, currentScaleCached);
 
         // If multiplying P by a non-zero product factor would reduce P below the scale boundary, increment the scale
-        } else if (currentP.mul(newProductFactor).div(DECIMAL_PRECISION) < SCALE_FACTOR) {
-            newP = currentP.mul(newProductFactor).mul(SCALE_FACTOR).div(DECIMAL_PRECISION); 
-            currentScale = currentScaleCached.add(1);
-            emit ScaleUpdated(currentScale);
+        if (currentP.mul(newProductFactor).div(DECIMAL_PRECISION) < SCALE_FACTOR) {
+            newP = currentP.mul(newProductFactor).mul(SCALE_FACTOR).div(DECIMAL_PRECISION);
+            currentScaleCached = currentScaleCached.add(1);
+            // If it’s still smaller than the SCALE_FACTOR, increment scale again.
+            // Afterwards it couldn’t happen again, as DECIMAL_PRECISION = SCALE_FACTOR^2
+            if (newP < SCALE_FACTOR) {
+                newP = currentP.mul(newProductFactor).mul(SCALE_FACTOR ** 2).div(DECIMAL_PRECISION);
+                currentScaleCached = currentScaleCached.add(1);
+            }
+            currentScale = currentScaleCached;
+            emit ScaleUpdated(currentScaleCached);
         } else {
             newP = currentP.mul(newProductFactor).div(DECIMAL_PRECISION);
         }
@@ -636,6 +640,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     function _decreaseLUSD(uint _amount) internal {
         uint newTotalLUSDDeposits = totalLUSDDeposits.sub(_amount);
+        require(newTotalLUSDDeposits >= MIN_LUSD_IN_SP, "Withdrawal must leave totalBoldDeposits >= MIN_LUSD_IN_SP");
         totalLUSDDeposits = newTotalLUSDDeposits;
         emit StabilityPoolLUSDBalanceUpdated(newTotalLUSDDeposits);
     }
@@ -660,17 +665,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     function _getETHGainFromSnapshots(uint initialDeposit, Snapshots memory snapshots) internal view returns (uint) {
         /*
-        * Grab the sum 'S' from the epoch at which the stake was made. The ETH gain may span up to one scale change.
+        * Grab the sum 'S' from the scale at which the stake was made. The ETH gain may span up to one scale change.
         * If it does, the second portion of the ETH gain is scaled by 1e9.
         * If the gain spans no scale change, the second portion will be 0.
         */
-        uint128 epochSnapshot = snapshots.epoch;
-        uint128 scaleSnapshot = snapshots.scale;
+        uint scaleSnapshot = snapshots.scale;
         uint S_Snapshot = snapshots.S;
         uint P_Snapshot = snapshots.P;
 
-        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(S_Snapshot);
-        uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(SCALE_FACTOR);
+        uint firstPortion = scaleToSum[scaleSnapshot].sub(S_Snapshot);
+        uint secondPortion = scaleToSum[scaleSnapshot.add(1)].div(SCALE_FACTOR);
 
         uint ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(DECIMAL_PRECISION);
 
@@ -724,17 +728,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     function _getLQTYGainFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view returns (uint) {
        /*
-        * Grab the sum 'G' from the epoch at which the stake was made. The LQTY gain may span up to one scale change.
+        * Grab the sum 'G' from the scale at which the stake was made. The LQTY gain may span up to one scale change.
         * If it does, the second portion of the LQTY gain is scaled by 1e9.
         * If the gain spans no scale change, the second portion will be 0.
         */
-        uint128 epochSnapshot = snapshots.epoch;
-        uint128 scaleSnapshot = snapshots.scale;
+        uint scaleSnapshot = snapshots.scale;
         uint G_Snapshot = snapshots.G;
         uint P_Snapshot = snapshots.P;
 
-        uint firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot].sub(G_Snapshot);
-        uint secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot.add(1)].div(SCALE_FACTOR);
+        uint firstPortion = scaleToG[scaleSnapshot].sub(G_Snapshot);
+        uint secondPortion = scaleToG[scaleSnapshot.add(1)].div(SCALE_FACTOR);
 
         uint LQTYGain = initialStake.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(DECIMAL_PRECISION);
 
@@ -784,14 +787,10 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         returns (uint)
     {
         uint snapshot_P = snapshots.P;
-        uint128 scaleSnapshot = snapshots.scale;
-        uint128 epochSnapshot = snapshots.epoch;
-
-        // If stake was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
-        if (epochSnapshot < currentEpoch) { return 0; }
+        uint scaleSnapshot = snapshots.scale;
 
         uint compoundedStake;
-        uint128 scaleDiff = currentScale.sub(scaleSnapshot);
+        uint scaleDiff = currentScale.sub(scaleSnapshot);
 
         /* Compute the compounded stake. If a scale change in P was made during the stake's lifetime,
         * account for it. If more than one scale change was made, then the stake has decreased by a factor of
@@ -879,20 +878,18 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
             emit DepositSnapshotUpdated(_depositor, 0, 0, 0);
             return;
         }
-        uint128 currentScaleCached = currentScale;
-        uint128 currentEpochCached = currentEpoch;
+        uint currentScaleCached = currentScale;
         uint currentP = P;
 
-        // Get S and G for the current epoch and current scale
-        uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
-        uint currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
+        // Get S and G for the current scale
+        uint currentS = scaleToSum[currentScaleCached];
+        uint currentG = scaleToG[currentScaleCached];
 
         // Record new snapshots of the latest running product P, sum S, and sum G, for the depositor
         depositSnapshots[_depositor].P = currentP;
         depositSnapshots[_depositor].S = currentS;
         depositSnapshots[_depositor].G = currentG;
         depositSnapshots[_depositor].scale = currentScaleCached;
-        depositSnapshots[_depositor].epoch = currentEpochCached;
 
         emit DepositSnapshotUpdated(_depositor, currentP, currentS, currentG);
     }
@@ -906,18 +903,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
             return;
         }
 
-        uint128 currentScaleCached = currentScale;
-        uint128 currentEpochCached = currentEpoch;
+        uint currentScaleCached = currentScale;
         uint currentP = P;
 
-        // Get G for the current epoch and current scale
-        uint currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
+        // Get G for the current scale
+        uint currentG = scaleToG[currentScaleCached];
 
         // Record new snapshots of the latest running product P and sum G for the front end
         frontEndSnapshots[_frontEnd].P = currentP;
         frontEndSnapshots[_frontEnd].G = currentG;
         frontEndSnapshots[_frontEnd].scale = currentScaleCached;
-        frontEndSnapshots[_frontEnd].epoch = currentEpochCached;
 
         emit FrontEndSnapshotUpdated(_frontEnd, currentP, currentG);
     }
