@@ -3,6 +3,7 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/ITroveManager.sol";
+import "./Interfaces/IAggregator.sol";
 import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
@@ -19,6 +20,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     string constant public NAME = "TroveManager";
 
     // --- Connected contract declarations ---
+
+    IAggregator public aggregator;
 
     address public borrowerOperationsAddress;
 
@@ -42,32 +45,16 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // --- Data structures ---
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
-    /*
-     * Half-life of 12h. 12h = 720 min
-     * (1/2) = d^720 => d = (1/2)^(1/720)
-     */
-    uint constant public MINUTE_DECAY_FACTOR = 999037758833783000;
     uint constant public REDEMPTION_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
-    //uint constant public MAX_BORROWING_FEE = DECIMAL_PRECISION / 100 * 5; // 5%
 
     uint constant public DRIP_STALENESS_THRESHOLD = 1 hours;
 
     // During bootsrap period redemptions are not allowed
     uint constant public BOOTSTRAP_PERIOD = 14 days;
 
-    /*
-    * BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base rate from a redemption.
-    * Corresponds to (1 / ALPHA) in the white paper.
-    */
-    uint constant public BETA = 2;
-
     uint public override accumulatedRate = RATE_PRECISION; // accumulated interest rate
     uint public lastAccRateUpdateTime = block.timestamp;
     uint public stakeRevenueAllocation = 25*10**16; // 25%
-    uint public baseRate;
-
-    // The timestamp of the latest fee operation (redemption only)
-    uint public lastFeeOperationTime;
 
     uint256 constant MAX_PAR_STALENESS = 60;
     uint256 constant MAX_RATE_STALENESS = 300;
@@ -128,8 +115,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // Error trackers for the trove redistribution calculation
     uint public lastETHError_Redistribution;
     uint public lastLUSDDebtError_Redistribution;
-
-    uint256 public dripResidual;
 
     /*
     * --- Variable container structs for liquidations ---
@@ -215,30 +200,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     // --- Events ---
-    /*
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event PriceFeedAddressChanged(address _newPriceFeedAddress);
-    event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
-    event ActivePoolAddressChanged(address _activePoolAddress);
-    event DefaultPoolAddressChanged(address _defaultPoolAddress);
-    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
-    event GasPoolAddressChanged(address _gasPoolAddress);
-    event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
-    event SortedTrovesAddressChanged(address _sortedTrovesAddress);
-    event LQTYTokenAddressChanged(address _lqtyTokenAddress);
-    event LQTYStakingAddressChanged(address _lqtyStakingAddress);
-    event RelayerAddressChanged(address _relayerAddress);
-
-    event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _collGasCompensation, uint _LUSDGasCompensation);
-    event Redemption(uint _attemptedLUSDAmount, uint _actualLUSDAmount, uint _ETHSent, uint _ETHFee);
-    event BaseRateUpdated(uint _baseRate);
-    event LastFeeOpTimeUpdated(uint _lastFeeOpTime);
-    event TotalStakesUpdated(uint _newTotalStakes);
-    event SystemSnapshotsUpdated(uint _totalStakesSnapshot, uint _totalCollateralSnapshot);
-    event LTermsUpdated(uint _L_ETH, uint _L_LUSDDebt);
-    event TroveSnapshotsUpdated(uint _L_ETH, uint _L_LUSDDebt);
-    event TroveIndexUpdated(address _borrower, uint _newIndex);
-    */
     event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint _stake, TroveManagerOperation _operation);
     event TroveLiquidated(address indexed _borrower, uint _debt, uint _coll, TroveManagerOperation _operation);
     event AccInterestRateUpdated(uint256 rate);
@@ -264,6 +225,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // --- Dependency setter ---
 
     function setAddresses(
+        address _aggregatorAddress,
         address _borrowerOperationsAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
@@ -281,6 +243,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         override
         onlyOwner
     {
+        checkContract(_aggregatorAddress);
         checkContract(_borrowerOperationsAddress);
         checkContract(_activePoolAddress);
         checkContract(_defaultPoolAddress);
@@ -294,6 +257,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         checkContract(_lqtyStakingAddress);
         checkContract(_relayerAddress);
 
+        aggregator = IAggregator(_aggregatorAddress);
         borrowerOperationsAddress = _borrowerOperationsAddress;
         activePool = IActivePool(_activePoolAddress);
         defaultPool = IDefaultPool(_defaultPoolAddress);
@@ -307,6 +271,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
         relayer = IRelayer(_relayerAddress);
 
+        emit AggregatorAddressChanged(_aggregatorAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
@@ -867,10 +832,10 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         // Decay the baseRate due to time passed, and then increase it according to the size of this redemption.
         // Use the saved total LUSD supply value, from before it was reduced by the redemption.
-        _updateBaseRateFromRedemption(totals.totalETHDrawn, totals.price, totals.par, totals.totalLUSDSupplyAtStart);
+        aggregator.updateBaseRateFromRedemption(totals.totalETHDrawn, totals.price, totals.par, totals.totalLUSDSupplyAtStart);
 
         // Calculate the ETH fee
-        totals.ETHFee = _getRedemptionFee(totals.totalETHDrawn);
+        totals.ETHFee = aggregator.getRedemptionFee(totals.totalETHDrawn);
 
         _requireUserAcceptsFee(totals.ETHFee, totals.totalETHDrawn, _maxFeePercentage);
 
@@ -1202,115 +1167,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         return _checkRecoveryMode(_price, accumulatedRate);
     }
 
-    // --- Redemption fee functions ---
-
-    /*
-    * This function has two impacts on the baseRate state variable:
-    * 1) decays the baseRate based on time passed since last redemption or LUSD borrowing operation.
-    * then,
-    * 2) increases the baseRate based on the amount redeemed, as a proportion of total supply
-    */
-    function _updateBaseRateFromRedemption(uint _ETHDrawn,  uint _price, uint _par, uint _totalLUSDSupply) internal returns (uint) {
-        uint decayedBaseRate = _calcDecayedBaseRate();
-
-        /* Convert the drawn ETH back to LUSD at face value rate (1 LUSD:1 USD), in order to get
-        * the fraction of total supply that was redeemed at face value. */
-        uint redeemedLUSDFraction = _ETHDrawn.mul(_price).mul(DECIMAL_PRECISION).div(_totalLUSDSupply.mul(_par));
-
-        uint newBaseRate = decayedBaseRate.add(redeemedLUSDFraction.div(BETA));
-        newBaseRate = LiquityMath._min(newBaseRate, DECIMAL_PRECISION); // cap baseRate at a maximum of 100%
-        //assert(newBaseRate <= DECIMAL_PRECISION); // This is already enforced in the line above
-        assert(newBaseRate > 0); // Base rate is always non-zero after redemption
-
-        // Update the baseRate state variable
-        baseRate = newBaseRate;
-        emit BaseRateUpdated(newBaseRate);
-        //emit BaseRateUpdated(_totalLUSDSupply);
-        
-        _updateLastFeeOpTime();
-
-        return newBaseRate;
-    }
-
-    function getRedemptionRate() public view override returns (uint) {
-        return _calcRedemptionRate(baseRate);
-    }
-
-    function getRedemptionRateWithDecay() public view override returns (uint) {
-        return _calcRedemptionRate(_calcDecayedBaseRate());
-    }
-
-    function _calcRedemptionRate(uint _baseRate) internal pure returns (uint) {
-        return LiquityMath._min(
-            REDEMPTION_FEE_FLOOR.add(_baseRate),
-            DECIMAL_PRECISION // cap at a maximum of 100%
-        );
-    }
-
-    function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
-        return _calcRedemptionFee(getRedemptionRate(), _ETHDrawn);
-    }
-
-    function getRedemptionFeeWithDecay(uint _ETHDrawn) external view override returns (uint) {
-        return _calcRedemptionFee(getRedemptionRateWithDecay(), _ETHDrawn);
-    }
-
-    function _calcRedemptionFee(uint _redemptionRate, uint _ETHDrawn) internal pure returns (uint) {
-        uint redemptionFee = _redemptionRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
-        require(redemptionFee < _ETHDrawn, "TroveManager: Fee would eat up all returned collateral");
-        return redemptionFee;
-    }
-
-    // --- Borrowing fee functions ---
-    /*
-    function getBorrowingRate() public view override returns (uint) {
-        return _calcBorrowingRate(baseRate);
-    }
-
-    function getBorrowingRateWithDecay() public view override returns (uint) {
-        return _calcBorrowingRate(_calcDecayedBaseRate());
-    }
-
-    function _calcBorrowingRate(uint _baseRate) internal pure returns (uint) {
-        return LiquityMath._min(
-            BORROWING_FEE_FLOOR.add(_baseRate),
-            MAX_BORROWING_FEE
-        );
-    }
-    */
-
-    /*
-    function getBorrowingFee(uint _LUSDDebt) external view override returns (uint) {
-        return _calcBorrowingFee(getBorrowingRate(), _LUSDDebt);
-    }
-
-    function getBorrowingFeeWithDecay(uint _LUSDDebt) external view override returns (uint) {
-        return _calcBorrowingFee(getBorrowingRateWithDecay(), _LUSDDebt);
-    }
-    */
-
-    /*
-    function _calcBorrowingFee(uint _borrowingRate, uint _LUSDDebt) internal pure returns (uint) {
-        return _borrowingRate.mul(_LUSDDebt).div(DECIMAL_PRECISION);
-    }
-    */
-
-
-    // Updates the baseRate state variable based on time elapsed since the last redemption or LUSD borrowing operation.
-    /*
-    function decayBaseRateFromBorrowing() external override {
-        _requireCallerIsBorrowerOperations();
-
-        uint decayedBaseRate = _calcDecayedBaseRate();
-        assert(decayedBaseRate <= DECIMAL_PRECISION);  // The baseRate can decay to 0
-
-        baseRate = decayedBaseRate;
-        emit BaseRateUpdated(decayedBaseRate);
-
-        _updateLastFeeOpTime();
-    }
-    */
-
     function _calcRevenuePayments(uint256 payment) internal view returns (uint256 stakePayment, uint256 spPayment) {
         stakePayment = stakeRevenueAllocation * payment / 1e18;
         spPayment = payment - stakePayment;
@@ -1454,30 +1310,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         //    actualDebt += 1;
         //}
 
-    }
-
-
-    // --- Internal fee functions ---
-
-    // Update the last fee operation time only if time passed >= decay interval. This prevents base rate griefing.
-    function _updateLastFeeOpTime() internal {
-        uint timePassed = block.timestamp.sub(lastFeeOperationTime);
-
-        if (timePassed >= SECONDS_IN_ONE_MINUTE) {
-            lastFeeOperationTime = block.timestamp;
-            emit LastFeeOpTimeUpdated(block.timestamp);
-        }
-    }
-
-    function _calcDecayedBaseRate() internal view returns (uint) {
-        uint minutesPassed = _minutesPassedSinceLastFeeOp();
-        uint decayFactor = LiquityMath._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
-
-        return baseRate.mul(decayFactor).div(DECIMAL_PRECISION);
-    }
-
-    function _minutesPassedSinceLastFeeOp() internal view returns (uint) {
-        return (block.timestamp.sub(lastFeeOperationTime)).div(SECONDS_IN_ONE_MINUTE);
     }
 
     // --- 'require' wrapper functions ---

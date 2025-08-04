@@ -8,6 +8,7 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const GasPool = artifacts.require("./GasPool.sol")
 const CollSurplusPool = artifacts.require("./CollSurplusPool.sol")
 const FunctionCaller = artifacts.require("./TestContracts/FunctionCaller.sol")
+const Aggregator = artifacts.require("./Aggregator.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
 const ParControl = artifacts.require("./ParControl.sol")
@@ -30,6 +31,7 @@ const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
+const AggregatorTester = artifacts.require("./AggregatorTester.sol")
 const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
 // Proxy scripts
@@ -90,6 +92,7 @@ class DeploymentHelper {
   static async deployLiquityCoreHardhat() {
     const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedTroves = await SortedTroves.new()
+    const aggregator = await Aggregator.new()
     const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
@@ -114,6 +117,7 @@ class DeploymentHelper {
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
     SortedTroves.setAsDeployed(sortedTroves)
+    Aggregator.setAsDeployed(aggregator)
     TroveManager.setAsDeployed(troveManager)
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
@@ -131,6 +135,7 @@ class DeploymentHelper {
       priceFeedTestnet,
       lusdToken,
       sortedTroves,
+      aggregator,
       troveManager,
       activePool,
       stabilityPool,
@@ -155,6 +160,7 @@ class DeploymentHelper {
     testerContracts.priceFeedTestnet = await PriceFeedTestnet.new()
     testerContracts.sortedTroves = await SortedTroves.new()
     // Actual tester contracts
+    testerContracts.aggregator = await AggregatorTester.new()
     testerContracts.communityIssuance = await CommunityIssuanceTester.new()
     testerContracts.activePool = await ActivePoolTester.new()
     testerContracts.defaultPool = await DefaultPoolTester.new()
@@ -241,6 +247,7 @@ class DeploymentHelper {
   static async deployLiquityCoreTruffle() {
     const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedTroves = await SortedTroves.new()
+    const aggregator = await Aggregator.new()
     const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
@@ -259,6 +266,7 @@ class DeploymentHelper {
       priceFeedTestnet,
       lusdToken,
       sortedTroves,
+      aggregator,
       troveManager,
       activePool,
       stabilityPool,
@@ -363,6 +371,7 @@ class DeploymentHelper {
 
     // set contracts in the Trove Manager
     await contracts.troveManager.setAddresses(
+      contracts.aggregator.address,
       contracts.borrowerOperations.address,
       contracts.activePool.address,
       contracts.defaultPool.address,
@@ -375,6 +384,12 @@ class DeploymentHelper {
       LQTYContracts.lqtyToken.address,
       LQTYContracts.lqtyStaking.address,
       contracts.relayer.address
+    )
+
+    // set contracts in the Aggregator
+    await contracts.aggregator.setAddresses(
+      contracts.troveManager.address,
+      contracts.lusdToken.address,
     )
 
     // set contracts in BorrowerOperations 

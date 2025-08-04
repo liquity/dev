@@ -2,6 +2,7 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const testInvariants = require("../utils/testInvariants.js")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
+const AggregatorTester = artifacts.require("./AggregatorTester.sol")
 const RelayerTester = artifacts.require("./RelayerTester.sol")
 const RateControlTester = artifacts.require("./RateControlTester.sol")
 const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
@@ -61,6 +62,7 @@ contract('TroveManager', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
+    contracts.aggregator = await AggregatorTester.new()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.rateControl = await RateControlTester.new()
     contracts.lusdToken = await LUSDTokenTester.new(
@@ -73,6 +75,7 @@ contract('TroveManager', async accounts => {
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
+    aggregator = contracts.aggregator
     troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
@@ -3411,7 +3414,7 @@ contract('TroveManager', async accounts => {
     await lusdToken.transfer(B, await lusdToken.balanceOf(A), {from: A})
     await lusdToken.transfer(B, await lusdToken.balanceOf(C), {from: C})
     
-    await troveManager.setBaseRate(0) 
+    await aggregator.setBaseRate(0) 
 
     // skip bootstrapping phase
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
@@ -3439,7 +3442,7 @@ contract('TroveManager', async accounts => {
     await lusdToken.transfer(B, await lusdToken.balanceOf(A), {from: A})
     await lusdToken.transfer(B, await lusdToken.balanceOf(C), {from: C})
 
-    await troveManager.setBaseRate(0) 
+    await aggregator.setBaseRate(0) 
 
     // Skip bootstrapping phase
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
@@ -3776,7 +3779,7 @@ contract('TroveManager', async accounts => {
     const totalSupply = await lusdToken.totalSupply()
     th.assertIsApproximatelyEqual(totalSupply, expectedTotalSupply)
 
-    await troveManager.setBaseRate(0) 
+    await aggregator.setBaseRate(0) 
 
     // skip bootstrapping phase
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
@@ -3788,17 +3791,17 @@ contract('TroveManager', async accounts => {
     const lessThan5pct = '49999999999999999'
     await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, lessThan5pct), "Fee exceeded provided maximum")
   
-    await troveManager.setBaseRate(0)  // artificially zero the baseRate
+    await aggregator.setBaseRate(0)  // artificially zero the baseRate
     
     // Max fee is 1%
     await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, dec(1, 16)), "Fee exceeded provided maximum")
   
-    await troveManager.setBaseRate(0)
+    await aggregator.setBaseRate(0)
 
      // Max fee is 3.754%
     await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, dec(3754, 13)), "Fee exceeded provided maximum")
   
-    await troveManager.setBaseRate(0)
+    await aggregator.setBaseRate(0)
 
     // Max fee is 0.5%
     await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, dec(5, 15)), "Fee exceeded provided maximum")
@@ -3814,7 +3817,7 @@ contract('TroveManager', async accounts => {
     const totalSupply = await lusdToken.totalSupply()
     th.assertIsApproximatelyEqual(totalSupply, expectedTotalSupply)
 
-    await troveManager.setBaseRate(0) 
+    await aggregator.setBaseRate(0) 
 
     // skip bootstrapping phase
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
@@ -3829,26 +3832,26 @@ contract('TroveManager', async accounts => {
     const tx1 = await th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, slightlyMoreThanFee)
     assert.isTrue(tx1.receipt.status)
 
-    await troveManager.setBaseRate(0)  // Artificially zero the baseRate
+    await aggregator.setBaseRate(0)  // Artificially zero the baseRate
     
     // Attempt with maxFee = 5.5%
     const exactSameFee = (await troveManager.getRedemptionFeeWithDecay(ETHDrawn))
     const tx2 = await th.redeemCollateralAndGetTxObject(C, contracts, attemptedLUSDRedemption, exactSameFee)
     assert.isTrue(tx2.receipt.status)
 
-    await troveManager.setBaseRate(0)
+    await aggregator.setBaseRate(0)
 
      // Max fee is 10%
     const tx3 = await th.redeemCollateralAndGetTxObject(B, contracts, attemptedLUSDRedemption, dec(1, 17))
     assert.isTrue(tx3.receipt.status)
 
-    await troveManager.setBaseRate(0)
+    await aggregator.setBaseRate(0)
 
     // Max fee is 37.659%
     const tx4 = await th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, dec(37659, 13))
     assert.isTrue(tx4.receipt.status)
 
-    await troveManager.setBaseRate(0)
+    await aggregator.setBaseRate(0)
 
     // Max fee is 100%
     const tx5 = await th.redeemCollateralAndGetTxObject(C, contracts, attemptedLUSDRedemption, dec(1, 18))

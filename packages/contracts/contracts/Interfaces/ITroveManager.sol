@@ -15,6 +15,7 @@ interface ITroveManager is ILiquityBase {
     
     // --- Events ---
 
+    event AggregatorAddressChanged(address _newAggregatorAddress);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
@@ -43,6 +44,7 @@ interface ITroveManager is ILiquityBase {
     // --- Functions ---
 
     function setAddresses(
+        address _aggregatorAddress,
         address _borrowerOperationsAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
@@ -69,6 +71,7 @@ interface ITroveManager is ILiquityBase {
     function getTroveFromTroveOwnersArray(uint _index) external view returns (address);
 
     function getNominalICR(address _borrower) external view returns (uint);
+
     function getCurrentICR(address _borrower, uint _price) external view returns (uint);
 
     function liquidate(address _borrower) external;
@@ -115,19 +118,6 @@ interface ITroveManager is ILiquityBase {
     function closeTrove(address _borrower) external;
 
     function removeStake(address _borrower) external;
-
-    function getRedemptionRate() external view returns (uint);
-    function getRedemptionRateWithDecay() external view returns (uint);
-
-    function getRedemptionFeeWithDecay(uint _ETHDrawn) external view returns (uint);
-
-    //function getBorrowingRate() external view returns (uint);
-    //function getBorrowingRateWithDecay() external view returns (uint);
-
-    //function getBorrowingFee(uint LUSDDebt) external view returns (uint);
-    //function getBorrowingFeeWithDecay(uint _LUSDDebt) external view returns (uint);
-
-    //function decayBaseRateFromBorrowing() external;
 
     function getTroveStatus(address _borrower) external view returns (uint);
     
