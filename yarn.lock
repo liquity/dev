@@ -1899,7 +1899,7 @@ __metadata:
     "@types/chai-spies": 1.0.3
     "@types/fs-extra": 9.0.8
     "@types/mocha": 8.2.1
-    "@types/node": 14.14.34
+    "@types/node": 24.5.2
     "@types/sinon-chai": 3.2.5
     "@types/ws": 7.4.4
     "@typescript-eslint/eslint-plugin": 4.17.0
@@ -4994,10 +4994,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:14.14.34":
-  version: 14.14.34
-  resolution: "@types/node@npm:14.14.34"
-  checksum: 06e49670700f9f8c9115232898c20bcb45abff9bac2a344cb046534c85cd19d91a4e86aa23fd022ac2b5d1ab3a68c5e220b96185cf7ae7d8e948736b217a5945
+"@types/node@npm:24.5.2":
+  version: 24.5.2
+  resolution: "@types/node@npm:24.5.2"
+  dependencies:
+    undici-types: ~7.12.0
+  checksum: 5d859c117a3e15e2e7cca429ba2db9b7c5ef167eb6386ab3db9f9aad7f705baee45957ad11d6c3d7514dc189ee9ec311905944dfbe9823497ad80a9f15add048
   languageName: node
   linkType: hard
 
@@ -23529,6 +23531,13 @@ __metadata:
   version: 5.26.5
   resolution: "undici-types@npm:5.26.5"
   checksum: 3192ef6f3fd5df652f2dc1cd782b49d6ff14dc98e5dced492aa8a8c65425227da5da6aafe22523c67f035a272c599bb89cfe803c1db6311e44bed3042fc25487
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~7.12.0":
+  version: 7.12.0
+  resolution: "undici-types@npm:7.12.0"
+  checksum: 4ad2770b92835757eee6416e8518972d83fc77286c11af81d368a55578d9e4f7ab1b8a3b13c304b0e25a400583e66f3c58464a051f8b5c801ab5d092da13903e
   languageName: node
   linkType: hard
 
