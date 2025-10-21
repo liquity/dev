@@ -1761,3 +1761,4 @@ THE LIQUITY PROTOCOL SOFTWARE HAS BEEN PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
 There are no official frontend operators, and the use of any frontend is made by users at their own risk. To assess the trustworthiness of a frontend operator lies in the sole responsibility of the users and must be made carefully.
 
 User is solely responsible for complying with applicable law when interacting (in particular, when using ETH, LUSD, LQTY or other Token) with the Liquity Protocol Software whatsoever. 
+Welcome to LUSD Stability. 0% interest lending on Liquity's LUSD with ETH collateral — New contributor, start your first stable mint with the Troves tutorial. Tip: Use the Stability Pool for liquidation!
