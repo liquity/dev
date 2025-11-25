@@ -1951,7 +1951,7 @@ __metadata:
     "@apollo/client": ^3.3.12
     "@ethersproject/address": ^5.4.0
     apollo: ^2.30.3
-    cross-fetch: ~3.0.6
+    cross-fetch: ~4.1.0
     graphql: ^15.3.0
     npm-run-all: ^4.1.5
     rimraf: ^3.0.2
@@ -9188,12 +9188,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-fetch@npm:~3.0.6":
-  version: 3.0.6
-  resolution: "cross-fetch@npm:3.0.6"
+"cross-fetch@npm:~4.1.0":
+  version: 4.1.0
+  resolution: "cross-fetch@npm:4.1.0"
   dependencies:
-    node-fetch: 2.6.1
-  checksum: fc855278c3bae191a00003eed618a40b48dfadf25ccf707ffdb173add97921f89ef459815bc5cbd20554de713da4f0a2c1258f83e60895efdeab5a7834c6e3b6
+    node-fetch: ^2.7.0
+  checksum: c02fa85d59f83e50dbd769ee472c9cc984060c403ee5ec8654659f61a525c1a655eef1c7a35e365c1a107b4e72d76e786718b673d1cb3c97f61d4644cb0a9f9d
   languageName: node
   linkType: hard
 
@@ -17673,14 +17673,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:2.6.1":
-  version: 2.6.1
-  resolution: "node-fetch@npm:2.6.1"
-  checksum: 91075bedd57879117e310fbcc36983ad5d699e522edb1ebcdc4ee5294c982843982652925c3532729fdc86b2d64a8a827797a745f332040d91823c8752ee4d7c
-  languageName: node
-  linkType: hard
-
-"node-fetch@npm:^2.1.2, node-fetch@npm:^2.2.0, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.11, node-fetch@npm:^2.6.12, node-fetch@npm:^2.6.8":
+"node-fetch@npm:^2.1.2, node-fetch@npm:^2.2.0, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.11, node-fetch@npm:^2.6.12, node-fetch@npm:^2.6.8, node-fetch@npm:^2.7.0":
   version: 2.7.0
   resolution: "node-fetch@npm:2.7.0"
   dependencies:
