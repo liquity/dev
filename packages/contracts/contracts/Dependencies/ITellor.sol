@@ -527,9 +527,9 @@ interface ITellor {
         returns (bool);
 
     /**
-     * @dev Retreive value from oracle based on timestamp
+     * @dev Retrieve value from oracle based on timestamp
      * @param _requestId being requested
-     * @param _timestamp to retreive data/value from
+     * @param _timestamp to retrieve data/value from
      * @return value for timestamp submitted
      */
     function retrieveData(uint256 _requestId, uint256 _timestamp)
